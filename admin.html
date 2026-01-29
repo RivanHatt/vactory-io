@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Admin - Vactory IO</title>
+    <style>
+        body { font-family: sans-serif; background: #0f172a; color: white; padding: 20px; }
+        .container { max-width: 1000px; margin: auto; }
+        h2 { color: #38bdf8; border-bottom: 2px solid #1e293b; padding-bottom: 10px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; background: #1e293b; border-radius: 8px; overflow: hidden; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #334155; font-size: 0.85rem; }
+        th { background: #334155; color: #38bdf8; }
+        tr:hover { background: #2d3a4f; }
+        .btn-maps { background: #38bdf8; color: #0f172a; padding: 5px 10px; border-radius: 4px; text-decoration: none; font-weight: bold; font-size: 0.75rem; }
+        .status-online { color: #4ade80; font-size: 0.7rem; margin-left: 10px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Vactory IO - Real-time Logs <span class="status-online">● Live Monitoring</span></h2>
+    <table id="logTable">
+        <thead>
+            <tr>
+                <th>Waktu</th>
+                <th>Lokasi (Lat,Lon)</th>
+                <th>Akurasi</th>
+                <th>Perangkat</th>
+                <th>Aksi</th>
+            </tr>
+        </thead>
+        <tbody id="tableBody">
+            </tbody>
+    </table>
+</div>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyCBkv4BE175yaj3S_xxuv0JcSMAMgW6Tn4",
+      authDomain: "track-ip-dan-gps.firebaseapp.com",
+      databaseURL: "https://track-ip-dan-gps-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "track-ip-dan-gps",
+      storageBucket: "track-ip-dan-gps.firebasestorage.app",
+      messagingSenderId: "475141239902",
+      appId: "1:475141239902:web:5dfbd6387d4b1fa23370cf"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+    const logRef = ref(db, 'Project_Vactory_Logs');
+
+    // Fungsi otomatis ambil data setiap kali ada perubahan di Firebase
+    onValue(logRef, (snapshot) => {
+        const data = snapshot.val();
+        const tableBody = document.getElementById('tableBody');
+        tableBody.innerHTML = ""; // Bersihkan tabel sebelum update
+
+        if (data) {
+            // Balik urutan agar data terbaru ada di paling atas
+            const keys = Object.keys(data).reverse();
+            keys.forEach((key) => {
+                const log = data[key];
+                const row = `<tr>
+                    <td>${log.timestamp || log.waktu}</td>
+                    <td>${log.lokasi || log.koordinat}</td>
+                    <td>${log.akurasi || '-'}</td>
+                    <td style="max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${log.device || log.user_agent}</td>
+                    <td><a href="${log.maps || log.link_maps}" target="_blank" class="btn-maps">BUKA PETA</a></td>
+                </tr>`;
+                tableBody.innerHTML += row;
+            });
+        } else {
+            tableBody.innerHTML = "<tr><td colspan='5' style='text-align:center;'>Belum ada data masuk.</td></tr>";
+        }
+    });
+</script>
+</body>
+</html>
